@@ -12,9 +12,9 @@ Any changes you make to your deployed app will be automatically pushed to this r
 
 ## Deployment
 
-Your project is live at:
+The project is live at:
 
-**[https://vercel.com/taznutfresh-gmailcoms-projects/franchise.ltd](https://vercel.com/taznutfresh-gmailcoms-projects/franchise.ltd)**
+**[franchise-1.vercel.app](https://vercel.com/taznutfresh-gmailcoms-projects/franchise.ltd)**
 
 ## Build your app
 
