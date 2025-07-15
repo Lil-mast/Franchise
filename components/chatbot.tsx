@@ -1,41 +1,60 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MessageCircle, Send, X } from "lucide-react"
+import { MessageCircle, Send, X, RefreshCw } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import OpenAI from "openai"
 
 interface Message {
   id: string
   text: string
   sender: "user" | "bot"
   timestamp: Date
+  isError?: boolean
 }
+
+// Initialize OpenAI (store API key in environment variables)
+const openai = new OpenAI({
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_KEY,
+  dangerouslyAllowBrowser: true // Only for frontend demo - prefer server-side in production
+})
 
 export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Hi there! 👋 Welcome to Franchise. How can I help you today?",
+      text: "Hi there! 👋 I'm your Franchise Assistant. Ask me about franchise opportunities, requirements, or locations.",
       sender: "bot",
       timestamp: new Date(),
     },
   ])
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const toggleChat = () => {
-    setIsOpen(!isOpen)
-  }
+  // Franchise-specific context for the AI
+  const franchiseContext = `
+    You are an expert assistant for a franchise business called "Franchise Ltd".
+    Key information:
+    - Available franchise types: Food & Beverage, Retail, Services
+    - Minimum investment: $50,000 - $300,000
+    - Training program: 2 weeks mandatory onboarding
+    - Territories available: USA, Canada, Kenya
+    - Current promotions: 10% discount on franchise fees for Q3 applicants
+    
+    Always respond professionally but friendly. If asked about financials, 
+    remind users to consult with our franchise advisors. For location-specific
+    questions, ask for their preferred region before answering.
+  `
 
-  const handleSend = (e?: React.FormEvent) => {
+  const toggleChat = () => setIsOpen(!isOpen)
+
+  const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-
     if (input.trim() === "") return
 
     // Add user message
@@ -45,33 +64,53 @@ export function Chatbot() {
       sender: "user",
       timestamp: new Date(),
     }
-
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsTyping(true)
+    setIsLoading(true)
 
-    // Simulate bot response
-    setTimeout(() => {
-      const botResponses = [
-        "Thanks for your message! Our team will get back to you soon.",
-        "That's a great question about our products. Our items are made with premium materials for durability and style.",
-        "Yes, we offer worldwide shipping! Delivery times vary by location.",
-        "Our premium membership gives you early access to new collections and exclusive discounts.",
-        "Feel free to check out our latest collection in the Products section!",
-      ]
+    try {
+      // Call OpenAI API
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo", // or "gpt-4-turbo" for better results
+        messages: [
+          {
+            role: "system",
+            content: franchiseContext
+          },
+          {
+            role: "user",
+            content: input
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 150
+      })
 
-      const randomResponse = botResponses[Math.floor(Math.random() * botResponses.length)]
+      const botResponse = completion.choices[0]?.message?.content || 
+        "I couldn't generate a response. Please try again."
 
       const botMessage: Message = {
         id: Date.now().toString(),
-        text: randomResponse,
+        text: botResponse,
         sender: "bot",
         timestamp: new Date(),
       }
-
       setMessages((prev) => [...prev, botMessage])
+    } catch (error) {
+      console.error("OpenAI error:", error)
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: "Sorry, I'm having trouble connecting. Please try again later.",
+        sender: "bot",
+        timestamp: new Date(),
+        isError: true
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
       setIsTyping(false)
-    }, 1500)
+      setIsLoading(false)
+    }
   }
 
   // Auto-scroll to bottom of messages
@@ -79,14 +118,33 @@ export function Chatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        setIsOpen(false)
+      }
+      if (e.key === "Enter" && isOpen && input.trim() !== "") {
+        handleSend()
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isOpen, input])
+
   return (
     <>
       {/* Chat button */}
       <Button
         onClick={toggleChat}
         className="fixed bottom-6 right-6 rounded-full w-14 h-14 bg-purple-600 hover:bg-purple-700 shadow-lg z-50"
+        aria-label="Open chat"
       >
-        <MessageCircle className="h-6 w-6 text-white" />
+        {isLoading ? (
+          <RefreshCw className="h-6 w-6 text-white animate-spin" />
+        ) : (
+          <MessageCircle className="h-6 w-6 text-white" />
+        )}
       </Button>
 
       {/* Chat window */}
@@ -96,12 +154,18 @@ export function Chatbot() {
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-24 right-6 w-80 sm:w-96 h-96 bg-black/90 border border-white/10 rounded-lg shadow-xl overflow-hidden z-50"
+            className="fixed bottom-24 right-6 w-80 sm:w-96 h-[32rem] bg-black/90 border border-white/10 rounded-lg shadow-xl overflow-hidden z-50 backdrop-blur-sm"
           >
             {/* Chat header */}
             <div className="bg-purple-600 p-4 flex justify-between items-center">
-              <h3 className="text-white font-medium">Franchise Support</h3>
-              <Button variant="ghost" size="icon" onClick={toggleChat} className="text-white h-8 w-8 p-0">
+              <h3 className="text-white font-medium">Franchise AI Assistant</h3>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleChat} 
+                className="text-white h-8 w-8 p-0 hover:bg-purple-700"
+                aria-label="Close chat"
+              >
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -115,10 +179,14 @@ export function Chatbot() {
                 >
                   <div
                     className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                      message.sender === "user" ? "bg-purple-600 text-white" : "bg-gray-800 text-gray-100"
+                      message.sender === "user" 
+                        ? "bg-purple-600 text-white" 
+                        : message.isError
+                          ? "bg-red-900/80 text-white"
+                          : "bg-gray-800 text-gray-100"
                     }`}
                   >
-                    <p>{message.text}</p>
+                    <p className="whitespace-pre-wrap">{message.text}</p>
                     <p className="text-xs opacity-70 mt-1">
                       {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </p>
@@ -130,18 +198,9 @@ export function Chatbot() {
                 <div className="flex justify-start mb-4">
                   <div className="bg-gray-800 text-gray-100 rounded-lg px-4 py-2">
                     <div className="flex space-x-1">
-                      <div
-                        className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
-                        style={{ animationDelay: "0ms" }}
-                      />
-                      <div
-                        className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
-                        style={{ animationDelay: "150ms" }}
-                      />
-                      <div
-                        className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
-                        style={{ animationDelay: "300ms" }}
-                      />
+                      <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
                   </div>
                 </div>
@@ -155,10 +214,16 @@ export function Chatbot() {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your message..."
-                className="bg-black/40 border-white/10 text-white"
+                placeholder="Ask about franchise opportunities..."
+                className="bg-black/40 border-white/10 text-white placeholder-gray-400 focus-visible:ring-purple-500"
+                disabled={isTyping}
               />
-              <Button type="submit" size="icon" className="bg-purple-600 hover:bg-purple-700">
+              <Button 
+                type="submit" 
+                size="icon" 
+                className="bg-purple-600 hover:bg-purple-700"
+                disabled={isTyping || input.trim() === ""}
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </form>
