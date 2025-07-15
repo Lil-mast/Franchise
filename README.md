@@ -14,7 +14,7 @@ Any changes you make to your deployed app will be automatically pushed to this r
 
 The project is live at:
 
-**[franchise-1.vercel.app](https://vercel.com/taznutfresh-gmailcoms-projects/franchise.ltd)**
+**[franchise-1.vercel.app]
 
 ## Build your app
 
