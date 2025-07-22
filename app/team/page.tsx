@@ -12,6 +12,7 @@ const teamMembers = [
     role: "Project Manager",
     image: "/images/christian.png",
     bio: "Christian leads our project management team, ensuring that all our collections are delivered on time and to the highest standards.",
+    age: 30,
   },
   {
     id: 2,
@@ -19,6 +20,7 @@ const teamMembers = [
     role: "Backend Engineer",
     image: "/images/fazaldeen.png",
     bio: "Fazaldeen is responsible for building and maintaining the robust systems that power our e-commerce platform.",
+    age: 25,
   },
   {
     id: 3,
@@ -26,6 +28,7 @@ const teamMembers = [
     role: "Frontend Engineer",
     image: "/images/rose.png",
     bio: "Rose creates the beautiful and intuitive user interfaces that make shopping on our platform a seamless experience.",
+    age: 28,
   },
   {
     id: 4,
@@ -33,6 +36,7 @@ const teamMembers = [
     role: "DevOps Engineer",
     image: "/images/samira.png",
     bio: "Samira ensures our platform is always available, secure, and performing at its best for our customers.",
+    age: 29,
   },
   {
     id: 5,
@@ -40,6 +44,7 @@ const teamMembers = [
     role: "Head of Design",
     image: "/images/nasra.png",
     bio: "Nasra leads our design team, creating the stunning visuals and brand identity that defines Franchise.",
+    age: 32,
   },
 ]
 
@@ -82,6 +87,7 @@ export default function TeamPage() {
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-2">{member.name}</h2>
                   <p className="text-purple-400 mb-4">{member.role}</p>
+                  <p className="text-gray-300 mb-4">{`Age: ${member.age}`}</p>
                   <p className="text-gray-300">{member.bio}</p>
                 </div>
               </motion.div>
