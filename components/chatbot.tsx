@@ -113,7 +113,7 @@ export function Chatbot() {
     }
   }
 
-  // Auto-scroll to bottom of messages
+  // Auto-scroll to bottom of messages.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])

@@ -64,6 +64,8 @@ def initiate_stk_push(consumer_key, consumer_secret, passkey, shortcode, phone_n
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
     }
 
+    print(f"STK Push Payload: {payload}")
+
     with httpx.Client() as client:
         response = client.post(stk_push_url, json=payload, headers=headers)
         print(f"STK push response: {response.text}")
