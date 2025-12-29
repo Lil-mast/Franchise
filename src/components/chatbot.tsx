@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { MessageCircle, Send, X, RefreshCw } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import OpenAI from "openai"
 
 interface Message {
   id: string
@@ -14,12 +13,6 @@ interface Message {
   timestamp: Date
   isError?: boolean
 }
-
-// Initialize OpenAI (store API key in environment variables)
-const openai = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_KEY,
-  dangerouslyAllowBrowser: true // Only for frontend demo - prefer server-side in production
-})
 
 export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false)
@@ -35,21 +28,6 @@ export function Chatbot() {
   const [isTyping, setIsTyping] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  // Franchise-specific context for the AI
-  const franchiseContext = `
-    You are an expert assistant for a franchise business called "Franchise Ltd".
-    Key information:
-    - Available franchise types: Food & Beverage, Retail, Services
-    - Minimum investment: $50,000 - $300,000
-    - Training program: 2 weeks mandatory onboarding
-    - Territories available: USA, Canada, Kenya
-    - Current promotions: 10% discount on franchise fees for Q3 applicants
-    
-    Always respond professionally but friendly. If asked about financials, 
-    remind users to consult with our franchise advisors. For location-specific
-    questions, ask for their preferred region before answering.
-  `
 
   const toggleChat = () => setIsOpen(!isOpen)
 
@@ -70,25 +48,21 @@ export function Chatbot() {
     setIsLoading(true)
 
     try {
-      // Call OpenAI API
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo", // or "gpt-4-turbo" for better results
-        messages: [
-          {
-            role: "system",
-            content: franchiseContext
-          },
-          {
-            role: "user",
-            content: input
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 150
+      // Call backend API instead of OpenAI directly
+      const response = await fetch('http://127.0.0.1:8080/api/openai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: input }),
       })
 
-      const botResponse = completion.choices[0]?.message?.content || 
-        "I couldn't generate a response. Please try again."
+      if (!response.ok) {
+        throw new Error('Failed to get response from server')
+      }
+
+      const data = await response.json()
+      const botResponse = data.response || "I couldn't generate a response. Please try again."
 
       const botMessage: Message = {
         id: Date.now().toString(),
@@ -98,7 +72,7 @@ export function Chatbot() {
       }
       setMessages((prev) => [...prev, botMessage])
     } catch (error) {
-      console.error("OpenAI error:", error)
+      console.error("API error:", error)
       const errorMessage: Message = {
         id: Date.now().toString(),
         text: "Sorry, I'm having trouble connecting. Please try again later.",

@@ -1,6 +1,6 @@
 # Franchise
 
-A modern web application for managing a franchise business, built with Next.js, Rust, and integrated with M-Pesa and OpenAI services. This project includes features for product management, shopping cart, checkout, team management, and more.
+A modern web application for managing a franchise business, built with Next.js and integrated with M-Pesa and OpenAI services. This project includes features for product management, shopping cart, checkout, team management, and more.
 
 ## Features
 
@@ -18,7 +18,46 @@ A modern web application for managing a franchise business, built with Next.js, 
 - **Backend**: Python Flask
 - **Integrations**: M-Pesa API, OpenAI API
 - **UI Components**: Shadcn/ui
-- **Package Manager**: pnpm (frontend), pip (backend) (frontend), pip (backend)
+- **Package Manager**: pnpm (frontend), pip (backend)
+
+## Project Structure
+
+```
+franchise/
+├── src/                          # Main application source code
+│   ├── app/                      # Next.js app router pages
+│   │   ├── layout.tsx           # Root layout component
+│   │   ├── page.tsx             # Home page
+│   │   ├── about/               # About page
+│   │   ├── cart/                # Shopping cart page
+│   │   ├── checkout/            # Checkout pages
+│   │   ├── contact/             # Contact page
+│   │   ├── products/            # Products pages
+│   │   ├── team/                # Team page
+│   │   └── ...
+│   ├── components/              # Reusable React components
+│   │   ├── ui/                  # UI components (Shadcn/ui)
+│   │   ├── header.tsx           # Site header
+│   │   ├── hero.tsx             # Hero section
+│   │   ├── chatbot.tsx          # AI chatbot
+│   │   └── ...
+│   ├── lib/                     # Utility libraries and configurations
+│   │   ├── hooks/               # Custom React hooks
+│   │   ├── utils.ts             # Utility functions
+│   │   └── ...
+│   └── styles/                  # Global styles and CSS
+├── backend/                     # Python Flask backend
+│   ├── backend.py               # Main Flask application
+│   ├── mpesa_integrations.py    # M-Pesa payment integration
+│   ├── openai_integrations.py   # OpenAI API integration
+│   └── requirements.txt         # Python dependencies
+├── public/                      # Static assets
+├── package.json                 # Node.js dependencies and scripts
+├── pnpm-lock.yaml              # pnpm lock file
+├── tsconfig.json               # TypeScript configuration
+├── tailwind.config.ts          # Tailwind CSS configuration
+└── README.md                   # This file
+```
 
 ## Setup Instructions
 
@@ -83,9 +122,10 @@ A modern web application for managing a franchise business, built with Next.js, 
 
 ### Project Structure
 
-- `app/`: Next.js app router pages
-- `components/`: React components
-- `lib/`: Utility functions and types
+- `src/app/`: Next.js app router pages
+- `src/components/`: React components
+- `src/lib/`: Utility functions and types
+- `src/styles/`: Global styles
 - `backend/`: Python Flask backend
   - `backend.py`: Main Flask server
   - `mpesa_integrations.py`: M-Pesa integration functions
